@@ -14,8 +14,8 @@ import Foundation
 struct OpenHaystackApp: App {
     @StateObject var accessoryController: AccessoryController
     var accessoryNearbyMonitor: AccessoryNearbyMonitor?
-    var frameWidth: CGFloat? = nil
-    var frameHeight: CGFloat? = nil
+    var frameWidth: CGFloat? = 0
+    var frameHeight: CGFloat? = 0
     
     @State var checkedForUpdates = false
 
@@ -60,9 +60,7 @@ struct OpenHaystackApp: App {
             OpenHaystackMainView()
                 .environmentObject(self.accessoryController)
                 .frame(width: self.frameWidth, height: self.frameHeight)
-        }
-        .commands {
-            SidebarCommands()
+                .hidden()
         }
     }
 }
