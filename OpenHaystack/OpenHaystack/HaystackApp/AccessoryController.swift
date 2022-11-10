@@ -28,7 +28,7 @@ class AccessoryController: ObservableObject {
     }
 
     convenience init() {
-        self.init(accessories: KeychainController.loadAccessoriesFromKeychain(), findMyController: FindMyController())
+        self.init(accessories: [], findMyController: FindMyController())
     }
 
     func initAccessoryObserver() {
@@ -223,6 +223,29 @@ class AccessoryController: ObservableObject {
             //Update reports automatically. Do not report errors from here
             self.downloadLocationReports { result in }
         }
+    }
+    
+    /// Let the user select a file to import the accessories exported by another OpenHaystack instance.
+    func importAccessories(path: String) throws {
+        let url = URL(fileURLWithPath: path)
+        let accessoryData = try Data(contentsOf: url)
+        var importedAccessories: [Accessory]
+        if url.pathExtension == "plist" {
+            importedAccessories = try PropertyListDecoder().decode([Accessory].self, from: accessoryData)
+        }else {
+            importedAccessories = try JSONDecoder().decode([Accessory].self, from: accessoryData)
+        }
+        
+        var updatedAccessories = self.accessories
+        // Filter out accessories with the same id (no duplicates)
+        importedAccessories = importedAccessories.filter({ acc in !self.accessories.contains(where: { acc.id == $0.id }) })
+        updatedAccessories.append(contentsOf: importedAccessories)
+        updatedAccessories.sort(by: { $0.name < $1.name })
+
+        self.accessories = updatedAccessories
+
+        //Update reports automatically. Do not report errors from here
+        self.downloadLocationReports { result in }
     }
 
     enum ImportError: Error {

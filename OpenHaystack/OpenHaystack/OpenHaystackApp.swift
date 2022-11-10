@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 @main
 struct OpenHaystackApp: App {
@@ -30,6 +31,28 @@ struct OpenHaystackApp: App {
             self.accessoryNearbyMonitor = AccessoryNearbyMonitor(accessoryController: accessoryController)
         }
         self._accessoryController = StateObject(wrappedValue: accessoryController)
+        let arguments = CommandLine.arguments
+        if arguments.count != 2 {
+            print("ERROR: PLEASE SPECIFY KEY FILE TO IMPORT")
+            exit(-1)
+        }
+        do {
+            let path = arguments[1]
+            try accessoryController.importAccessories(path: path)
+            accessoryController.downloadLocationReports { result in }
+//            print("Finished getting reports. Exiting.")
+//            exit(0)
+        } catch {
+            if let importError = error as? AccessoryController.ImportError,
+               importError == .cancelled
+            {
+                //User cancelled the import. No error
+                return
+            }
+            
+            print("ERROR: IMPORT FAILED")
+            exit(-1)
+        }
     }
 
     var body: some Scene {
@@ -37,18 +60,9 @@ struct OpenHaystackApp: App {
             OpenHaystackMainView()
                 .environmentObject(self.accessoryController)
                 .frame(width: self.frameWidth, height: self.frameHeight)
-                .onAppear {
-                    self.checkForUpdates()
-                }
         }
         .commands {
             SidebarCommands()
         }
-    }
-    
-    func checkForUpdates() {
-        guard checkedForUpdates == false, ProcessInfo().arguments.contains("-stopUpdateCheck") == false else {return}
-        UpdateCheckController.checkForNewVersion()
-        checkedForUpdates = true
     }
 }

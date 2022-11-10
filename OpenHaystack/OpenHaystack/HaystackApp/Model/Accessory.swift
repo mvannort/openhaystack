@@ -221,9 +221,9 @@ class Accessory: ObservableObject, Codable, Identifiable, Equatable, Hashable {
             let untilDate = Date() + TimeInterval(self.updateInterval * 11)
             var derivationTimestamp = self.lastDerivationTimestamp
             var derivedSymmetricKey = self.oldestRelevantSymmetricKey
-
-            print("--- Derived keys for \(self.name) ---")
-            print("Masterbacon symmetric key \(self.symmetricKey.hexEncodedString())")
+//
+//            print("--- Derived keys for \(self.name) ---")
+//            print("Masterbacon symmetric key \(self.symmetricKey.hexEncodedString())")
             do {
                 let uncompressedMasterBeaconKey = try self.getUncompressedPublicKey()
                 print("Masterbeacon public key (uncompressed) \(uncompressedMasterBeaconKey.hexEncodedString())")
