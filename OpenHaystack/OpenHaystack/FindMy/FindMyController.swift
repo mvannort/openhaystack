@@ -225,6 +225,8 @@ class FindMyController: ObservableObject {
         }
 
         completion()
+        print("Finished decrypting reports. Exiting...")
+        exit(0)
 
     }
 
