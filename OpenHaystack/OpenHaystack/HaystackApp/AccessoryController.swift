@@ -221,12 +221,12 @@ class AccessoryController: ObservableObject {
             self.accessories = updatedAccessories
 
             //Update reports automatically. Do not report errors from here
-            self.downloadLocationReports { result in }
+            self.downloadLocationReports(options:[false, false], outfile:"") { result in }
         }
     }
     
     /// Let the user select a file to import the accessories exported by another OpenHaystack instance.
-    func importAccessories(path: String) throws {
+    func importAccessories(path: String, options: Array<Bool>, outfile: String) throws {
         let url = URL(fileURLWithPath: path)
         let accessoryData = try Data(contentsOf: url)
         var importedAccessories: [Accessory]
@@ -245,7 +245,7 @@ class AccessoryController: ObservableObject {
         self.accessories = updatedAccessories
 
         //Update reports automatically. Do not report errors from here
-        self.downloadLocationReports { result in }
+        self.downloadLocationReports(options: options, outfile: outfile) { result in }
     }
 
     enum ImportError: Error {
@@ -257,7 +257,7 @@ class AccessoryController: ObservableObject {
     /// Download the location reports from.
     ///
     /// - Parameter completion: called when the reports have been succesfully downloaded or the request has failed
-    func downloadLocationReports(completion: @escaping (Result<Void, OpenHaystackMainView.AlertType>) -> Void) {
+    func downloadLocationReports(options: Array<Bool>, outfile: String, completion: @escaping (Result<Void, OpenHaystackMainView.AlertType>) -> Void) {
         AnisetteDataManager.shared.requestAnisetteData { [weak self] result in
             guard let self = self else {
                 completion(.failure(.noReportsFound))
@@ -275,7 +275,7 @@ class AccessoryController: ObservableObject {
                     return
                 }
 
-                self.findMyController.fetchReports(for: self.accessories, with: token) { [weak self] result in
+                self.findMyController.fetchReports(for: self.accessories, with: token, options: options, outfile: outfile) { [weak self] result in
                     switch result {
                     case .failure(let error):
                         os_log(.error, "Downloading reports failed %@", error.localizedDescription)

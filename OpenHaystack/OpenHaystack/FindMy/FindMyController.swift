@@ -21,7 +21,7 @@ class FindMyController: ObservableObject {
             let devices = try PropertyListDecoder().decode([FindMyDevice].self, from: data)
 
             self.devices.append(contentsOf: devices)
-            self.fetchReports(with: searchPartyToken, completion: completion)
+            self.fetchReports(with: searchPartyToken, options:[false, false], outfile:"", completion: completion)
         } catch {
             self.error = FindMyErrors.decodingPlistFailed(message: String(describing: error))
         }
@@ -87,7 +87,7 @@ class FindMyController: ObservableObject {
         }
     }
 
-    func fetchReports(for accessories: [Accessory], with token: Data, completion: @escaping (Result<[FindMyDevice], Error>) -> Void) {
+    func fetchReports(for accessories: [Accessory], with token: Data, options: Array<Bool>, outfile: String, completion: @escaping (Result<[FindMyDevice], Error>) -> Void) {
         let findMyDevices = accessories.compactMap({ acc -> FindMyDevice? in
             do {
                 return try acc.toFindMyDevice()
@@ -99,7 +99,7 @@ class FindMyController: ObservableObject {
 
         self.devices = findMyDevices
 
-        self.fetchReports(with: token) { error in
+        self.fetchReports(with: token, options: options, outfile: outfile) { error in
 
             if let error = error {
                 completion(.failure(error))
@@ -110,7 +110,7 @@ class FindMyController: ObservableObject {
         }
     }
 
-    func fetchReports(with searchPartyToken: Data, completion: @escaping (Error?) -> Void) {
+    func fetchReports(with searchPartyToken: Data, options: Array<Bool>, outfile: String, completion: @escaping (Error?) -> Void) {
 
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else {
@@ -167,12 +167,13 @@ class FindMyController: ObservableObject {
                     }
                 }
 
-                #if EXPORT
+//                if !options[0] && options[1] {
+                if !options[0] && outfile != "" {
                     if let encoded = try? JSONEncoder().encode(reports) {
                         let outputDirectory = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
-                        try? encoded.write(to: outputDirectory.appendingPathComponent("reports.json"))
+                        try? encoded.write(to: outputDirectory.appendingPathComponent(outfile))
                     }
-                #endif
+                }
 
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else {
@@ -180,9 +181,10 @@ class FindMyController: ObservableObject {
                         return
                     }
                     self.devices = devices
-
-                    self.decryptReports {
-                        completion(nil)
+                    if options[1] {
+                        self.decryptReports {
+                            completion(nil)
+                        }
                     }
 
                 }

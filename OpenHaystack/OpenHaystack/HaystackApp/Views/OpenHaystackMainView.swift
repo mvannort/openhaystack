@@ -190,7 +190,7 @@ struct OpenHaystackMainView: View {
     /// Download the location reports for all current accessories. Shows an error if something fails, like plug-in is missing
     func downloadLocationReports() {
         self.isLoading = true
-        self.accessoryController.downloadLocationReports { result in
+        self.accessoryController.downloadLocationReports(options:[false, false], outfile:"") { result in
             self.isLoading = false
             switch result {
             case .failure(let alert):

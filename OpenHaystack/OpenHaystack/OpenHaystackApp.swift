@@ -32,14 +32,56 @@ struct OpenHaystackApp: App {
         }
         self._accessoryController = StateObject(wrappedValue: accessoryController)
         let arguments = CommandLine.arguments
-        if arguments.count != 2 {
+        print(arguments)
+        if arguments.count < 2 {
             print("ERROR: PLEASE SPECIFY KEY FILE TO IMPORT")
             exit(-1)
         }
+//        var batch = false
+//        var verbose = false
+        var outfile = ""
+        var printout = true
+        var decrypt = true
+        var skip = false
+        for (i, a) in arguments.enumerated() {
+            if !skip && (i != 0) && (i != (arguments.count-1)) {
+                switch a {
+                case "-nd":
+                    decrypt = false
+                case "--no_decrypt":
+                    decrypt = false
+//                case "-b":
+//                    batch = true
+//                case "--batch":
+//                    batch = true
+//                case "-v":
+//                    verbose = true
+//                case "--verbose":
+//                    verbose = true
+                case "-o":
+                    outfile = arguments[i+1]
+                    printout = false
+                    skip = true
+                case "--output":
+                    outfile = arguments[i+1]
+                    printout = false
+                    skip = true
+                default:
+                    print("ERROR: INVALID ARGUMENTS")
+                }
+            } else {
+                skip = false
+            }
+        }
+//        let options = [batch,printout,decrypt]
+        let options = [printout,decrypt]
         do {
-            let path = arguments[1]
-            try accessoryController.importAccessories(path: path)
-            accessoryController.downloadLocationReports { result in }
+            let path = arguments.last!
+//            if let unwrappedPath = path?.componentsSeparatedByString(","){
+//                let path = unwrappedPath
+//            }
+            try accessoryController.importAccessories(path: path, options: options, outfile: outfile)
+            accessoryController.downloadLocationReports(options: options, outfile: outfile) { result in }
 //            print("Finished getting reports. Exiting.")
 //            exit(0)
         } catch {
